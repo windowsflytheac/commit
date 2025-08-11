@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Source-Style JS Game</title>
+<style>
+  body { margin:0; background:#222; color:#eee; font-family: monospace; }
+  #game { background:#333; display: block; margin: 10px auto; border: 2px solid #555; }
+  #ui { text-align:center; }
+  button { font-size: 16px; padding: 5px 10px; margin: 5px; }
+</style>
+</head>
+<body>
+
+<canvas id="game" width="800" height="600"></canvas>
+<div id="ui">
+  <button id="spawnBox">Spawn Box</button>
+</div>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+const keys = {};
+window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+const player = {
+  x: 100,
+  y: 500,
+  width: 30,
+  height: 50,
+  color: 'white',
+  speed: 4,
+  velX: 0,
+  velY: 0,
+  jumping: false,
+  onGround: false,
+};
+
+const gravity = 0.7;
+const friction = 0.8;
+
+const boxes = [];
+
+const portals = {
+  A: null, // {x, y, width, height}
+  B: null,
+};
+
+const groundLevel = 580;
+
+function rectsColliding(a, b) {
+  return !(a.x + a.width < b.x ||
+           a.x > b.x + b.width ||
+           a.y + a.height < b.y ||
+           a.y > b.y + b.height);
+}
+
+// Spawn a box at a default location
+function spawnBox() {
+  boxes.push({x: 400, y: groundLevel - 40, width: 40, height: 40, color: 'orange', velX: 0, velY: 0, held: false});
+}
+document.getElementById('spawnBox').onclick = spawnBox;
+
+let heldBox = null;
+
+canvas.addEventListener('mousedown', e => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  if (e.button === 0) { // Left click = Portal A
+    portals.A = {x: mx - 10, y: my - 40, width: 20, height: 80};
+  } else if (e.button === 2) { // Right click = Portal B
+    portals.B = {x: mx - 10, y: my - 40, width: 20, height: 80};
+  }
+});
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+function update() {
+  // Horizontal movement
+  if (keys['a']) {
+    player.velX = -player.speed;
+  } else if (keys['d']) {
+    player.velX = player.speed;
+  } else {
+    player.velX *= friction;
+    if (Math.abs(player.velX) < 0.1) player.velX = 0;
+  }
+
+  // Jumping
+  if (keys['w'] && player.onGround) {
+    player.velY = -14;
+    player.jumping = true;
+    player.onGround = false;
+  }
+
+  player.velY += gravity;
+
+  player.x += player.velX;
+  player.y += player.velY;
+
+  // Ground collision
+  if (player.y + player.height >= groundLevel) {
+    player.y = groundLevel - player.height;
+    player.velY = 0;
+    player.onGround = true;
+    player.jumping = false;
+  }
+
+  // Keep player inside canvas horizontally
+  if (player.x < 0) player.x = 0;
+  if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+
+  // Box physics
+  for (let box of boxes) {
+    if (!box.held) {
+      box.velY += gravity;
+      box.x += box.velX;
+      box.y += box.velY;
+
+      // Ground collision
+      if (box.y + box.height >= groundLevel) {
+        box.y = groundLevel - box.height;
+        box.velY = 0;
+        box.velX *= friction;
+      }
+
+      // Keep inside canvas horizontally
+      if (box.x < 0) {
+        box.x = 0;
+        box.velX = -box.velX * 0.5;
+      }
+      if (box.x + box.width > canvas.width) {
+        box.x = canvas.width - box.width;
+        box.velX = -box.velX * 0.5;
+      }
+    }
+  }
+
+  // Pick up box with E
+  if (keys['e']) {
+    if (!heldBox) {
+      for (let box of boxes) {
+        if (!box.held && rectsColliding(player, box)) {
+          heldBox = box;
+          box.held = true;
+          break;
+        }
+      }
+    }
+  } else {
+    if (heldBox) {
+      // Throw box with player velocity + some throw speed
+      heldBox.held = false;
+      heldBox.velX = player.velX * 2;
+      heldBox.velY = -5;
+      heldBox = null;
+    }
+  }
+
+  // Move held box with player
+  if (heldBox) {
+    heldBox.x = player.x + player.width + 5;
+    heldBox.y = player.y + player.height - heldBox.height;
+    heldBox.velX = 0;
+    heldBox.velY = 0;
+  }
+
+  // Portal teleportation check
+  if (portals.A && portals.B) {
+    // Player teleport if inside portal A
+    if (rectsColliding(player, portals.A)) {
+      // Teleport player near portal B (offset to prevent stuck)
+      player.x = portals.B.x + portals.B.width + 5;
+      player.y = portals.B.y + portals.B.height / 2 - player.height / 2;
+    } else if (rectsColliding(player, portals.B)) {
+      // Teleport player near portal A
+      player.x = portals.A.x - player.width - 5;
+      player.y = portals.A.y + portals.A.height / 2 - player.height / 2;
+    }
+
+    // Boxes teleport too
+    for (let box of boxes) {
+      if (rectsColliding(box, portals.A)) {
+        box.x = portals.B.x + portals.B.width + 5;
+        box.y = portals.B.y + portals.B.height / 2 - box.height / 2;
+        box.velX = 0; box.velY = 0;
+      } else if (rectsColliding(box, portals.B)) {
+        box.x = portals.A.x - box.width - 5;
+        box.y = portals.A.y + portals.A.height / 2 - box.height / 2;
+        box.velX = 0; box.velY = 0;
+      }
+    }
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw ground
+  ctx.fillStyle = '#555';
+  ctx.fillRect(0, groundLevel, canvas.width, canvas.height - groundLevel);
+
+  // Draw player
+  ctx.fillStyle = player.color;
+  ctx.fillRect(player.x, player.y, player.width, player.height);
+
+  // Draw boxes
+  for (let box of boxes) {
+    ctx.fillStyle = box.color;
+    ctx.fillRect(box.x, box.y, box.width, box.height);
+  }
+
+  // Draw portals
+  if (portals.A) {
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(portals.A.x, portals.A.y, portals.A.width, portals.A.height);
+  }
+  if (portals.B) {
+    ctx.fillStyle = 'orange';
+    ctx.fillRect(portals.B.x, portals.B.y, portals.B.width, portals.B.height);
+  }
+}
+
+function gameLoop() {
+  update();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+
+</body>
+</html>
