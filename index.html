@@ -9,14 +9,11 @@
   </style>
 </head>
 <body>
-  <!-- Three.js core library -->
-  <script src="https://unpkg.com/three@0.152.2/build/three.min.js"></script>
-  <!-- GLTF Loader -->
-  <script src="https://unpkg.com/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
-  <!-- Orbit Controls -->
-  <script src="https://unpkg.com/three@0.152.2/examples/js/controls/OrbitControls.js"></script>
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js';
+    import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/loaders/GLTFLoader.js';
+    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/controls/OrbitControls.js';
 
-  <script>
     let scene, camera, renderer, controls;
     let melModel;
 
@@ -34,7 +31,7 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.body.appendChild(renderer.domElement);
 
-      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls = new OrbitControls(camera, renderer.domElement);
       controls.target.set(0, 1, 0);
       controls.update();
 
@@ -45,17 +42,17 @@
       const ambientLight = new THREE.AmbientLight(0x404040);
       scene.add(ambientLight);
 
-      const loader = new THREE.GLTFLoader();
+      const loader = new GLTFLoader();
       loader.load(
         'assets/models/mel/mel.gltf',
-        function (gltf) {
+        (gltf) => {
           melModel = gltf.scene;
           melModel.scale.set(1, 1, 1);
           melModel.position.set(0, 0, 0);
           scene.add(melModel);
         },
         undefined,
-        function (error) {
+        (error) => {
           console.error('Error loading Mel model:', error);
         }
       );
@@ -72,9 +69,7 @@
     function animate() {
       requestAnimationFrame(animate);
 
-      if (melModel) {
-        melModel.rotation.y += 0.01;
-      }
+      if (melModel) melModel.rotation.y += 0.01;
 
       renderer.render(scene, camera);
     }
