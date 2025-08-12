@@ -44,7 +44,7 @@
 
       const loader = new GLTFLoader();
       loader.load(
-        'assets/models/mel/mel.gltf',
+        'assets/models/mel/mel.gltf.json',  // Note the renamed file here
         (gltf) => {
           melModel = gltf.scene;
           melModel.scale.set(1, 1, 1);
