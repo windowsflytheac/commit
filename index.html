@@ -1,30 +1,71 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>Mel's Portal Gun</title>
-  <script src="https://cdn.babylonjs.com/babylon.js"></script>
-  <script src="https://cdn.babylonjs.com/loaders/babylon.glTFFileLoader.min.js"></script>
+    <meta charset="utf-8">
+    <title>Neurotoxin Scene</title>
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            background-color: black;
+            overflow: hidden;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+    </style>
 </head>
 <body>
-  <canvas id="renderCanvas" touch-action="none" style="width:100%; height:100%;"></canvas>
-  <script>
-    const canvas = document.getElementById("renderCanvas");
-    const engine = new BABYLON.Engine(canvas, true);
-    const scene = new BABYLON.Scene(engine);
-    const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 4, 3, BABYLON.Vector3.Zero(), scene);
-    camera.attachControl(canvas, true);
+    <canvas id="renderCanvas"></canvas>
 
-    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
+    <!-- Babylon.js -->
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
 
-    BABYLON.SceneLoader.Append("./", "mel.gltf", scene, function (scene) {
-        console.log("Model loaded!");
-    }, null, function (scene, message) {
-        console.error("It's your old friend deadly neurotoxin: " + message);
-    });
+    <script>
+        // Get canvas
+        const canvas = document.getElementById("renderCanvas");
 
-    engine.runRenderLoop(() => scene.render());
-    window.addEventListener("resize", () => engine.resize());
-  </script>
+        // Create engine
+        const engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
+
+        // Create scene
+        const scene = new BABYLON.Scene(engine);
+        scene.clearColor = new BABYLON.Color4(0, 0, 0, 1); // Black background
+
+        // Camera
+        const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 3, 3, BABYLON.Vector3.Zero(), scene);
+        camera.attachControl(canvas, true);
+
+        // Light
+        const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+        // Load model
+        BABYLON.SceneLoader.Append(
+            "./assets/models/mel/", 
+            "mel.gltf", 
+            scene, 
+            function () {
+                console.log("Model loaded successfully.");
+            }, 
+            null, 
+            function (scene, message) {
+                console.error("It's your old friend deadly neurotoxin: " + message);
+            }
+        );
+
+        // Render loop
+        engine.runRenderLoop(() => {
+            scene.render();
+        });
+
+        // Resize handling
+        window.addEventListener("resize", () => {
+            engine.resize();
+        });
+    </script>
 </body>
 </html>
