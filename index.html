@@ -1,58 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Mel's Portal Gun</title>
-    <style>
-        body { margin: 0; background: #000; }
-        canvas { display: block; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Mel's Portal Gun</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: white; }
+  </style>
 </head>
 <body>
 <script type="module">
-    import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.module.js";
-    import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.159.0/examples/jsm/loaders/GLTFLoader.js";
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js";
+import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/loaders/GLTFLoader.js";
 
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+// Scene & Camera
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-    // Lighting
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(5, 5, 5);
-    scene.add(light);
+// Renderer
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0xffffff, 1); // White background
+document.body.appendChild(renderer.domElement);
 
-    const ambient = new THREE.AmbientLight(0x404040);
-    scene.add(ambient);
+// Lighting
+const ambientLight = new THREE.AmbientLight(0xffffff, 1.2); // bright ambient
+scene.add(ambientLight);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+directionalLight.position.set(5, 10, 7);
+scene.add(directionalLight);
 
-    // Load Mel's Portal Gun
-    const loader = new GLTFLoader();
-    loader.load(
-        "mel_portalgun.gltf", // Make sure this path is correct
-        (gltf) => {
-            scene.add(gltf.scene);
-        },
-        undefined,
-        (error) => {
-            console.error("It's your old friend, deadly neurotoxin.", error);
-        }
-    );
+// Load GLTF model
+const loader = new GLTFLoader();
+loader.load(
+  "mel.gltf", // Change this to the correct path on GitHub Pages
+  function (gltf) {
+    scene.add(gltf.scene);
+  },
+  undefined,
+  function (error) {
+    console.error("It's your old friend deadly neurotoxin", error);
+  }
+);
 
-    camera.position.z = 5;
+camera.position.z = 5;
 
-    function animate() {
-        requestAnimationFrame(animate);
-        renderer.render(scene, camera);
-    }
-    animate();
+// Handle resize
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
 
-    window.addEventListener("resize", () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+// Animation loop
+function animate() {
+  requestAnimationFrame(animate);
+  renderer.render(scene, camera);
+}
+animate();
 </script>
 </body>
 </html>
