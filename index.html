@@ -1,62 +1,30 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <title>Mel's Portal Gun</title>
-  <style>
-    body { margin: 0; overflow: hidden; background: white; }
-  </style>
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  <script src="https://cdn.babylonjs.com/loaders/babylon.glTFFileLoader.min.js"></script>
 </head>
 <body>
-<script type="module">
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js";
-import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/loaders/GLTFLoader.js";
+  <canvas id="renderCanvas" touch-action="none" style="width:100%; height:100%;"></canvas>
+  <script>
+    const canvas = document.getElementById("renderCanvas");
+    const engine = new BABYLON.Engine(canvas, true);
+    const scene = new BABYLON.Scene(engine);
+    const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 4, 3, BABYLON.Vector3.Zero(), scene);
+    camera.attachControl(canvas, true);
 
-// Scene & Camera
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
 
-// Renderer
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setClearColor(0xffffff, 1); // White background
-document.body.appendChild(renderer.domElement);
+    BABYLON.SceneLoader.Append("./", "mel.gltf", scene, function (scene) {
+        console.log("Model loaded!");
+    }, null, function (scene, message) {
+        console.error("It's your old friend deadly neurotoxin: " + message);
+    });
 
-// Lighting
-const ambientLight = new THREE.AmbientLight(0xffffff, 1.2); // bright ambient
-scene.add(ambientLight);
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-directionalLight.position.set(5, 10, 7);
-scene.add(directionalLight);
-
-// Load GLTF model
-const loader = new GLTFLoader();
-loader.load(
-  "mel.gltf", // Change this to the correct path on GitHub Pages
-  function (gltf) {
-    scene.add(gltf.scene);
-  },
-  undefined,
-  function (error) {
-    console.error("It's your old friend deadly neurotoxin", error);
-  }
-);
-
-camera.position.z = 5;
-
-// Handle resize
-window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-// Animation loop
-function animate() {
-  requestAnimationFrame(animate);
-  renderer.render(scene, camera);
-}
-animate();
-</script>
+    engine.runRenderLoop(() => scene.render());
+    window.addEventListener("resize", () => engine.resize());
+  </script>
 </body>
 </html>
