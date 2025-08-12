@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>portal stories: mel - portal gun model</title>
+  <title>Portal Stories: Mel - Portal Gun Model</title>
   <style>
     body { margin: 0; overflow: hidden; }
     canvas { display: block; }
@@ -43,8 +43,9 @@
       scene.add(ambientLight);
 
       const loader = new GLTFLoader();
+
       loader.load(
-        'assets/models/mel/mel.gltf.json',
+        'assets/models/mel/mel.gltf',
         (gltf) => {
           melModel = gltf.scene;
           melModel.scale.set(1, 1, 1);
@@ -53,7 +54,7 @@
         },
         undefined,
         (error) => {
-          console.error('Error loading mel model:', error);
+          console.error('Error loading Mel model:', error);
         }
       );
 
@@ -68,9 +69,7 @@
 
     function animate() {
       requestAnimationFrame(animate);
-
       if (melModel) melModel.rotation.y += 0.01;
-
       renderer.render(scene, camera);
     }
   </script>
